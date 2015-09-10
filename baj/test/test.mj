@@ -1,0 +1,25 @@
+class Program {
+	static int k = 1;
+	static final boolean jj = true;
+    static void main() {
+		
+		int k = 3,kk=0;
+		int[4]w = {1,0,2,3};
+		//w[2*2+1] = k;
+		while(2<k)
+		{
+			continue;
+			break;
+		}
+		read(k);
+		read(w[2]);
+		fun(k,3,w);
+    }
+
+	static int fun(int j,int i, int[] k)
+	{
+		k[j] = k[i];
+		k[i] = j;
+		return j;
+	}
+}

@@ -1,0 +1,1385 @@
+options {
+  JAVA_UNICODE_ESCAPE = true;
+  //ERROR_REPORTING = false;
+  STATIC = false;
+  //DEBUG_PARSER = true;
+  //DEBUG_LOOKAHEAD = true;
+}
+
+PARSER_BEGIN(Parser)
+package  edu.ustc.cs.compile.skipoominijool;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
+import java.util.List;
+import java.util.LinkedList;
+
+import org.eclipse.jdt.core.dom.*;
+import edu.ustc.cs.compile.platform.interfaces.ParserInterface;
+import edu.ustc.cs.compile.platform.interfaces.ParserException;
+import edu.ustc.cs.compile.platform.interfaces.InterRepresent;
+import edu.ustc.cs.compile.platform.util.ir.HIR;
+import edu.ustc.cs.compile.platform.util.ASTView.core.*;
+import edu.ustc.cs.compile.platform.util.ASTView.plugin.*;
+
+public class Parser implements ParserInterface {
+  private boolean success = false;
+  private boolean debug = true;
+  private int error_num = 0;
+    
+  private AST ast = AST.newAST(AST.JLS3);
+  private ASTNode root = null;
+    
+  public Parser(){
+  }
+
+  public ASTNode getAST() {
+    if (success) {
+      return root;
+    }
+    return null;
+  }
+
+  void setPosition(ASTNode n, Token t){
+      n.setProperty("line", t.beginLine);
+      n.setProperty("column", t.beginColumn);
+  }
+
+  void setPosition(ASTNode a, ASTNode b){
+      a.setProperty("line", b.getProperty("line"));
+      a.setProperty("column", b.getProperty("column"));
+  }
+
+  boolean isKeyword(String s){
+      return s.equals("int")
+              || s.equals("boolean")
+              || s.equals("String")
+              || s.equals("final")
+              || s.equals("read")
+              || s.equals("print")
+              || s.equals("if")
+              || s.equals("else")
+              || s.equals("while")
+              || s.equals("break")
+              || s.equals("continue")
+              || s.equals("void")
+              || s.equals("class")
+              || s.equals("return")
+              || s.equals("true")
+              || s.equals("false");
+  }
+
+  public InterRepresent doParse(File src) throws ParserException {
+	System.out.println("#SkipOOMiniJOOL Parser - by baj@mail.ustc.edu.cn (c) 2008");
+    try{
+      jj_input_stream = new JavaCharStream(new FileReader(src), 1, 1);
+    } catch(Exception e){
+      e.printStackTrace();
+      throw new ParserException();
+    }
+    
+    token_source = new ParserTokenManager(jj_input_stream);
+    token = new Token();
+    jj_ntk = -1;
+    jj_gen = 0;
+    for (int i = 0; i < 37; i++) jj_la1[i] = -1;
+    for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
+    
+    try {
+      root = Program();
+    }
+    catch (ParseException e) {
+      System.err.println("Error " + error_num + ": error in parse routine - details:\n" + e.toString());
+      return null;
+//      throw new ParserException();
+    }
+    catch(Error err){
+      System.err.println("Error " + error_num + ": unrecognized token - details:\n" + err.toString());
+      return null;
+//      throw new ParserException();
+    }
+
+    if (error_num > 0){
+        System.err.println("Fatal: Error in Parser, could not continue for Checker");
+        throw new ParserException();
+    }
+    HIR ir = new HIR();
+    ir.setIR(root);
+        
+    success = true;
+    return ir;
+  }
+}
+PARSER_END(Parser)
+
+/* WHITE SPACE */
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+/* COMMENTS */
+
+MORE :
+{
+  <"/**" ~["/"]> { input_stream.backup(1); } : IN_FORMAL_COMMENT
+|
+  "/*" : IN_MULTI_LINE_COMMENT
+}
+
+SPECIAL_TOKEN :
+{
+  <SINGLE_LINE_COMMENT: "//" (~["\n", "\r"])* ("\n" | "\r" | "\r\n")?>
+}
+
+<IN_FORMAL_COMMENT>
+SPECIAL_TOKEN :
+{
+  <FORMAL_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+MORE :
+{
+  < ~[] >
+}
+
+/* RESERVED WORDS AND LITERALS */
+
+TOKEN :
+{
+  < PROGRAM: "Program">
+| < CLASS: "class" >
+| < INT: "int" >
+| < BOOLEAN: "boolean" >
+| < STRING: "String" >
+| < IF: "if" >
+| < ELSE: "else" >
+| < WHILE: "while" >
+| < CONTINUE: "continue" >
+| < BREAK: "break" >
+| < STATIC: "static" >
+| < FINAL: "final" >
+| < VOID: "void" >
+| < RETURN: "return" >
+| < READ: "read">
+| < PRINT: "print">
+}
+
+/* LITERALS */
+
+TOKEN :
+{
+  < INTEGER_LITERAL: <DECIMAL_LITERAL> | <HEX_LITERAL> | <OCTAL_LITERAL> >
+|
+  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+|
+  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+  < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+|
+  < STRING_LITERAL:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
+| < TRUE: "true">
+| < FALSE: "false">
+| < LENGTH: "length" >
+}
+
+/* IDENTIFIER */
+
+TOKEN :
+{
+  < IDENTIFIER: <LINE_LETTER> (<DIGIT_LINE_LETTER>)* >
+|
+  < #LINE_LETTER: ("_")?["a"-"z","A"-"Z"] >
+|    
+  < #DIGIT_LINE_LETTER:
+      [  // all chars for which Character.isIdentifierPart is true
+         "0"-"9",
+         "A"-"Z",
+         "_",
+         "a"-"z"
+      ]
+  >
+}
+
+/* SEPARATORS */
+
+TOKEN :
+{
+  < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMICOLON: ";" >
+| <COMMA: ",">
+| < DOT: "." >
+}
+
+/* OPERATORS */
+
+TOKEN :
+{
+  < ASSIGN: "=" >
+| < LT: "<" >
+| < GT: ">" >
+| < BANG: "!" >
+| < EQ: "==" >
+| < LE: "<=" >
+| < GE: ">=" >
+| < NE: "!=" >
+| < OR: "||" >
+| < AND: "&&" >
+| < INCR: "++" >
+| < DECR: "--" >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < STAR: "*" >
+| < SLASH: "/" >
+| < REM: "%" >
+| < PLUSASSIGN: "+=" >
+| < MINUSASSIGN: "-=" >
+| < STARASSIGN: "*=" >
+| < SLASHASSIGN: "/=" >
+| < REMASSIGN: "%=" >
+}
+
+
+/***************************************************
+ * THE SkipOOMiniJOOL LANGUAGE GRAMMAR STARTS HERE *
+ ***************************************************/
+
+CompilationUnit Program():
+{
+  CompilationUnit cu;
+  TypeDeclaration td;
+}
+{
+  {
+    cu = ast.newCompilationUnit();
+  }
+  td = class_declaration()
+  <EOF>
+  {
+    setPosition(cu, td);
+    success = true;
+    cu.types().add(td);
+    return cu;
+  }
+}
+
+TypeDeclaration class_declaration():
+{
+  TypeDeclaration td;
+  LinkedList classbody;
+  Token program;
+}
+{
+  {
+    td = ast.newTypeDeclaration();
+    classbody = new LinkedList();
+  }
+  (
+   <CLASS>
+  {setPosition(td, token);}
+   |
+   error("class spell error")
+  )
+  (
+    program = <PROGRAM> | program = <IDENTIFIER> {error("class name should be \"Program\"");}
+    |
+    error("miss class name")
+    {program = new Token(); program.kind = PROGRAM; program.image = "MISSING";}
+  )
+  classbody = class_body()
+  {
+	td.setName(ast.newSimpleName(program.image));
+	td.bodyDeclarations().addAll(classbody);
+	return td;
+  }
+}
+
+LinkedList class_body():
+{
+  LinkedList body;
+  BodyDeclaration bd;
+}
+{
+  {body = new LinkedList();}
+  (
+   <LBRACE>
+   | error("\"{\" expected in class body declaration")
+  )
+  (
+    bd = class_body_declaration()
+    {body.add(bd);}
+  )* //为了查错方便
+  (
+   <RBRACE>
+   | LOOKAHEAD(<EOF>) error("\"}\" expected in class body declaration")
+  )
+  {return body;}
+}
+
+BodyDeclaration class_body_declaration():
+{
+  FieldDeclaration fd;
+  MethodDeclaration md;
+}
+{
+  /*LOOKAHEAD(method_header())*/
+  LOOKAHEAD([<STATIC>] (simple_type() | primitive_type()) <IDENTIFIER> (<LPAREN> | <RPAREN> | type()))
+  md = method_decalartion() {return md;}
+  |
+  fd = field_declaration() {return fd;}
+}
+
+FieldDeclaration field_declaration():
+{
+  FieldDeclaration fd;
+  Type pt;
+  LinkedList vdfs;
+  boolean is_static;
+  boolean is_final;
+}
+{
+  {is_static = false; is_final = false;}
+  (( <STATIC> { is_static = true; }) | ( <FINAL> { is_final = true; }))*
+  (
+    (
+        pt = type()
+        fd = field_variable_declarators() (<SEMICOLON> | error("\";\" expected in field declaration"))
+        {
+            if (is_static == true){
+                fd.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
+            }
+            if (is_final == true){
+                fd.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.FINAL_KEYWORD));
+            }
+            fd.setType(pt);
+            return fd;
+        }
+    )
+    | statement() //放在这里是为了从错误的全局变量声明或方法声明中恢复过来
+      {
+        error("wrong field declaration");
+        VariableDeclarationFragment vdf = ast.newVariableDeclarationFragment();
+        fd = ast.newFieldDeclaration(vdf);
+        setPosition(fd, token);
+        return fd;
+     }
+   )
+}
+
+FieldDeclaration field_variable_declarators():
+{
+  FieldDeclaration fd;
+  VariableDeclarationFragment vdf;
+}
+{
+  (
+    vdf = variable_declarator()
+    {fd = ast.newFieldDeclaration(vdf);}
+    (
+      (
+        <COMMA>
+        //| error("\",\" expected in variable declarators")
+      )
+      vdf = variable_declarator()
+      {fd.fragments().add(vdf);}
+    )*
+  )
+  {
+    setPosition(fd, vdf);
+    return fd;
+  }
+}
+
+VariableDeclarationStatement variable_declarators():
+{
+  VariableDeclarationStatement vds;
+  VariableDeclarationFragment vdf;
+}
+{
+  ( vdf = variable_declarator()
+  {
+    vds = ast.newVariableDeclarationStatement(vdf);
+  }
+    (
+      (
+       <COMMA>
+       //| error("\",\" expected in variable declarators")
+      )
+      vdf = variable_declarator()
+      {vds.fragments().add(vdf);}
+    )*
+  )
+  {return vds;}
+}
+
+VariableDeclarationFragment variable_declarator():
+{
+  VariableDeclarationFragment vdf;
+  Expression e;
+  Token t;
+}
+{
+    {vdf = ast.newVariableDeclarationFragment();}
+  (
+   t = <IDENTIFIER>
+   | error("miss identifer in variable declarator")
+     {
+      t = getNextToken();
+      if (t != null){
+          if (t.kind == EOF){
+              return vdf;
+          }
+          setPosition(vdf, token);
+          if (isKeyword(t.image)){
+              error("keyword \"" + t.image + "\" is misused");
+          }
+      }
+       return vdf;
+     }
+  )
+  [
+    <ASSIGN> e = variable_initializer()
+    {vdf.setInitializer(e);}
+  ]
+  {
+    setPosition(vdf, t);
+    vdf.setName(ast.newSimpleName(t.image));
+    return vdf;
+  }
+}
+
+Expression variable_initializer(): //TODO
+{
+  Expression e;
+}
+{
+  ( e = expression() | e = array_initializer() )
+  {return e;}
+}
+
+ArrayInitializer array_initializer():
+{
+  ArrayInitializer ai;
+  Expression e;
+}
+{
+  {ai = ast.newArrayInitializer();setPosition(ai, token);}
+  <LBRACE>
+  [
+    e = expression()
+    {ai.expressions().add(e);}
+    (
+      LOOKAHEAD(2) <COMMA> e = expression()
+      {ai.expressions().add(e);}
+    )*
+  ]
+  [ <COMMA> {error("initialization expression should not end with \",\"");}]
+  <RBRACE>
+  {return ai;}
+}
+
+MethodDeclaration method_decalartion():
+{
+  MethodDeclaration md;
+  Block body;
+}
+{
+  md = method_header()
+  body = method_body()
+  {
+    md.setBody(body);
+    return md;
+  }
+}
+
+
+
+MethodDeclaration method_header():
+{
+  MethodDeclaration md;
+  Type t;
+  Token tok;
+  LinkedList parameters;
+}
+{
+  {md = ast.newMethodDeclaration(); setPosition(md, token);}
+  ( <STATIC> {md.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));} )*
+  (t = type() /*| error("expected type in method header") {t = ast.newPrimitiveType(PrimitiveType.VOID);}*/)
+  {md.setReturnType2(t);}
+  tok = <IDENTIFIER>
+  (
+   <LPAREN>
+   | error("\"(\" expected in method header")
+  )
+  [
+    LOOKAHEAD(type()) parameters = formal_parameter_list()
+    {md.parameters().addAll(parameters);}
+  ]
+  (
+   <RPAREN>
+   | error("\")\" expected in method header")
+  )
+  {setPosition(md, tok); md.setName(ast.newSimpleName(tok.image)); return md;}
+}
+
+LinkedList formal_parameter_list():
+{
+  LinkedList parameters;
+  SingleVariableDeclaration svd;
+}
+{
+  {parameters = new LinkedList();}
+  (
+    svd = formal_parameter() {parameters.add(svd);}
+    ( <COMMA> svd = formal_parameter() {parameters.add(svd);} )*
+  )
+  {return parameters;}
+}
+
+SingleVariableDeclaration formal_parameter():
+{
+  SingleVariableDeclaration svd;
+  Type t;
+  Token tok;
+}
+{
+  {svd = ast.newSingleVariableDeclaration(); setPosition(svd, token);}
+  (
+   t = type()
+   /*|
+   error("miss type in formal parameter list")
+   {t = ast.newPrimitiveType(PrimitiveType.VOID);}*/
+  )
+  tok = <IDENTIFIER>
+  {
+    svd.setType(t);
+    svd.setName(ast.newSimpleName(tok.image));
+    return svd;
+  }
+}
+
+Block method_body():
+{
+  Block b;
+}
+{
+  b = block()
+  {return b;}
+}
+
+Block block():
+{
+  Block b;
+  LinkedList bss;
+}
+{
+  {
+    b = ast.newBlock();
+    setPosition(b, token);
+    bss = new LinkedList();
+  }
+  <LBRACE> [ bss = block_statements() ] <RBRACE>
+  {b.statements().addAll(bss); return b;}
+}
+
+LinkedList block_statements():
+{
+  LinkedList bss;
+  Statement s;
+}
+{
+  {bss = new LinkedList();}
+  try {
+    ( ( s = block_statement() {bss.add(s);} )+ )
+  }
+  catch (ParseException e) {
+    error_skipto2(SEMICOLON, "error in block statements", e);
+  }
+  {return bss;}
+}
+
+Statement block_statement():
+{
+  Statement s;
+}
+{
+  (
+   (
+    try {
+      s = local_variable_declaration_statement()
+    }
+    catch(ParseException e){
+      error_skipto2(SEMICOLON, "error in local variable declaration statement", e);
+      {s = ast.newEmptyStatement(); setPosition(s, token); return s;}
+    }
+   )
+   |
+   s = statement()
+  )
+  {return s;}
+}
+
+VariableDeclarationStatement local_variable_declaration_statement():
+{
+  VariableDeclarationStatement vds;
+  Type t;
+}
+{
+  t = type()
+  vds = variable_declarators()
+  (
+   <SEMICOLON> | error("\";\" expected in local variable declaration statement")
+  )
+  {vds.setType(t); return vds;}
+}
+
+Statement statement():
+{
+  Statement s;
+  Expression e;
+  Statement s2;
+  IfStatement i;
+  ReturnStatement r;
+  LinkedList args;
+  MethodInvocation mi;
+  ExpressionStatement se;
+}
+{
+	try {
+		(
+          (
+            <SEMICOLON> {s = ast.newEmptyStatement(); setPosition(s, token); return s;}
+          )
+          | (
+              s = statement_expression()
+              (
+                <SEMICOLON>
+                | error("\";\" expected in expression statement")
+              )
+             {return s;}
+            )
+          | (
+              <BREAK>
+              (
+                <SEMICOLON>
+                | error("\";\" expected in break statement")
+              )
+            {s = ast.newBreakStatement(); setPosition(s, token); return s;}
+            )
+          | (
+              <CONTINUE>
+             (
+               <SEMICOLON>
+               | error("\";\" expected in continue statement")
+             )
+             {s = ast.newContinueStatement(); setPosition(s, token); return s;}
+            )
+          | (
+             <RETURN> {r = ast.newReturnStatement(); setPosition(r, token);}
+              [ e = expression() {r.setExpression(e);}]
+              (
+               <SEMICOLON>
+               | error("\";\" expected in return statement")
+              )
+              { return r; }
+            )
+          | (
+              s = block() {return s;}
+            )
+          | (
+             <IF>
+             (
+               <LPAREN>
+                | error("\"(\" expected in if condition")
+             )
+             (
+               (
+                e = expression()
+                (
+                 <RPAREN>
+                 | error("\")\" expected in if condition")
+                )
+               )
+               |
+               error_skipto(RPAREN, "miss/wrong condition in if statement")
+               {e = ast.newBooleanLiteral(true);}
+             )
+             s2 = statement()
+             {
+               i = ast.newIfStatement();
+               setPosition(i, token);
+               i.setExpression(e);
+               i.setThenStatement(s2);
+             }
+             [ LOOKAHEAD(1) <ELSE> s2 = statement() {i.setElseStatement(s2); s = i;}]
+             {return i;}
+            )      
+          | (
+              <WHILE>
+              (
+               <LPAREN>
+                | error("\"(\" expected in while condition")
+              )
+              (
+               (
+                e = expression()
+                (
+                 <RPAREN>
+                 | error("\")\" expected in while condition")
+                )
+               )
+               |
+               error_skipto(RPAREN, "miss/wrong condition in while statement")
+               {e = ast.newBooleanLiteral(true);}
+              )
+              s2 = statement()
+              {
+                WhileStatement w = ast.newWhileStatement();
+                setPosition(w, token);
+                w.setExpression(e);
+                w.setBody(s2);
+                return w;
+              }
+            )
+          | (
+              <PRINT>
+              (
+                <LPAREN>
+                | error("\"(\" expected in print statement")
+              )
+              (
+                args = argument_list()
+                (
+                  (
+                    <RPAREN>
+                    | error("\")\" expected in print statement")
+                  )
+                ) 
+             )
+             (
+               <SEMICOLON>
+              | error("\";\" expected in print statement")
+             )
+             {
+                 mi = ast.newMethodInvocation();
+                 mi.setName(ast.newSimpleName("print"));
+                 mi.arguments().addAll(args);
+                 if (args.size() > 1){
+                     error("print statement can only take ine argument");
+                 }
+                 setPosition(mi, token);
+                 se = ast.newExpressionStatement(mi);
+                 return se;
+             }
+           )
+         | (
+              <READ>
+              (
+                <LPAREN>
+                | error("\"(\" expected in read statement")
+              )
+              (
+                args = argument_list()
+                (
+                  (
+                    <RPAREN>
+                    | error("\")\" expected in read statement")
+                  )
+                ) 
+             )
+             (
+               <SEMICOLON>
+              | error("\";\" expected in read statement")
+             )
+             {
+                 mi = ast.newMethodInvocation();
+                 mi.setName(ast.newSimpleName("read"));
+                 mi.arguments().addAll(args);
+                 if (args.size() > 1){
+                     error("read statement can only take ine argument");
+                 }
+                 setPosition(mi, token);
+                 se = ast.newExpressionStatement(mi);
+                 return se;
+             }
+           )
+		)
+       {return s;}
+	}
+	catch (ParseException pe) {
+		error_skipto2(SEMICOLON, "error in statement", pe);
+        {s = ast.newEmptyStatement(); return s;}
+	}
+}
+
+ExpressionStatement statement_expression():
+{
+  ExpressionStatement se;
+  Expression e;
+}
+{
+  (
+    /*LOOKAHEAD(<IDENTIFIER><LPAREN>) se = method_invocation()
+    | LOOKAHEAD(assignment_expression()) se = assignment_statement()
+    |*/ e = expression() {se = ast.newExpressionStatement(e); setPosition(se, e);}
+  )
+  {return se;}
+}
+
+Expression primary_expression():
+{
+    Expression e;
+}
+{
+    (
+      LOOKAHEAD(assignment_expression()) e = assignment_expression()
+      |
+      e = primary()
+    )
+    {return e;}
+}
+
+Expression primary():
+{
+  Expression e, e1;
+  Token t;
+}
+{
+  (
+    LOOKAHEAD(<IDENTIFIER> <LPAREN>) e = method_invocation_expression()
+	| LOOKAHEAD(<IDENTIFIER> <LBRACKET>) e = array_access()
+    | LOOKAHEAD(<IDENTIFIER> <DOT>) e = array_size()
+	| e = literal()
+    | t = name()
+      {
+          e = ast.newSimpleName(t.image);
+          setPosition(e, t);
+      }
+    | <LPAREN> e1 = expression() <RPAREN>
+      {
+        ParenthesizedExpression pe = ast.newParenthesizedExpression();
+        pe.setExpression(e1);
+        e = pe;
+      }
+  )
+  {return e;}
+}
+
+MethodInvocation method_invocation_expression():
+{
+  MethodInvocation mi;
+  LinkedList args;
+  Token t;
+}
+{
+  {mi = ast.newMethodInvocation(); args = new LinkedList();}
+  t = name() <LPAREN> [ args = argument_list() ] <RPAREN>
+  {
+    mi.setName(ast.newSimpleName(t.image));
+    mi.arguments().addAll(args);
+    setPosition(mi, t);
+    return mi;
+  }
+}
+
+ExpressionStatement method_invocation(): //PRINT\WRITE
+{
+  ExpressionStatement se;
+  MethodInvocation mi;
+}
+{
+  mi = method_invocation_expression()
+  {
+    se = ast.newExpressionStatement(mi);
+    setPosition(se, mi);
+    return se;
+  }
+}
+
+LinkedList argument_list():
+{
+  LinkedList args;
+  Expression e;
+}
+{
+  {args = new LinkedList();}
+  e = expression() {args.add(e);}
+  ( <COMMA> e = expression() {args.add(e);})*
+  {return args;}
+}
+
+ArrayAccess array_access():
+{
+  ArrayAccess aa;
+  Token t;
+  Expression e = ast.newNumberLiteral();
+}
+{
+  {aa = ast.newArrayAccess();}
+  t = name() <LBRACKET>
+  (
+    e = expression()
+    {
+        setPosition(e, t);
+    }
+    | error("miss index expression in array access")
+      {
+          e = ast.newNumberLiteral();
+          setPosition(e, t);
+      }
+  )
+  <RBRACKET>
+  {
+    aa.setArray(ast.newSimpleName(t.image));
+    aa.setIndex(e);
+    setPosition(aa, t);
+    return aa;
+  }
+}
+
+QualifiedName array_size() :
+{
+    Token id;
+    QualifiedName qn;
+}
+{
+    id = < IDENTIFIER > < DOT > < LENGTH >
+    {
+        qn = ast.newQualifiedName(ast.newSimpleName(id.image), ast.newSimpleName("length"));
+        setPosition(qn, token);
+        return qn;
+    }
+}
+
+Expression expression():
+{
+  Expression e;
+}
+{
+  e = or_expression()
+  {return e;}
+}
+
+Expression or_expression():
+{
+  Expression e, e1,e2;
+  InfixExpression ie;
+}
+{
+  e1 = and_expression() {e = e1;}
+  ( LOOKAHEAD(2)
+    {e = ie = ast.newInfixExpression(); setPosition(e, token); ie.setLeftOperand(e1);}
+     <OR> e2 = and_expression()
+    {
+      ie.setOperator(InfixExpression.Operator.CONDITIONAL_OR);
+      ie.setRightOperand(e2);
+      e1 = ie;
+    }
+  )*
+  {
+    return e;
+  }
+}
+
+Expression and_expression():
+{
+  Expression e, e1,e2;
+  InfixExpression ie;
+}
+{
+  e1 = compare_expression() {e = e1;}
+  (
+    LOOKAHEAD(2) 
+  {e = ie = ast.newInfixExpression();  setPosition(e, token);ie.setLeftOperand(e1);}
+    <AND> e2 = compare_expression()
+    {
+      ie.setOperator(InfixExpression.Operator.CONDITIONAL_AND);
+      ie.setRightOperand(e2);
+      e1 = ie;
+    }
+  )*
+  {
+    return e;
+  }
+}
+
+Expression compare_expression():
+{
+  Expression e, e1,e2;
+  InfixExpression ie;
+}
+{
+  e1 = equal_expression() {e = e1;}
+  (
+    LOOKAHEAD(2) 
+  {e = ie = ast.newInfixExpression();  setPosition(e, token);ie.setLeftOperand(e1);}
+    ( <LT> {ie.setOperator(InfixExpression.Operator.LESS);}
+      | <LE> {ie.setOperator(InfixExpression.Operator.LESS_EQUALS);}
+      | <GT> {ie.setOperator(InfixExpression.Operator.GREATER);}
+      | <GE> {ie.setOperator(InfixExpression.Operator.GREATER_EQUALS);}
+    )
+    e2 = equal_expression()
+    {
+      ie.setRightOperand(e2);
+      e1 = ie;
+    }
+  )*
+  {
+    return e;
+  }
+}
+
+Expression equal_expression():
+{
+  Expression e, e1,e2;
+  InfixExpression ie;
+}
+{
+  e1 = term_expression() {e = e1;}
+  (
+    LOOKAHEAD(2) 
+  {e = ie = ast.newInfixExpression(); setPosition(e, token); ie.setLeftOperand(e1);}
+    ( <EQ> {ie.setOperator(InfixExpression.Operator.EQUALS);}
+      | <NE> {ie.setOperator(InfixExpression.Operator.NOT_EQUALS);}
+    )
+    e2 = term_expression()
+    {
+      ie.setRightOperand(e2);
+      e1 = ie;
+    }
+  )*
+  {
+    return e;
+  }
+}
+
+Expression term_expression():
+{
+  Expression e, e1,e2;
+  InfixExpression ie;
+}
+{
+  e1 = factor_expression() {e = e1;}
+  (
+    LOOKAHEAD(2)
+  {e = ie = ast.newInfixExpression(); setPosition(e, token); ie.setLeftOperand(e1);}
+    ( <PLUS> {ie.setOperator(InfixExpression.Operator.PLUS);}
+      | <MINUS> {ie.setOperator(InfixExpression.Operator.MINUS);}
+    )
+    e2 = factor_expression()
+    {
+      ie.setRightOperand(e2);
+      e1 = ie;
+    }
+  )*
+  {
+    return e;
+  }
+}
+
+Expression factor_expression():
+{
+  Expression e, e1,e2;
+  InfixExpression ie;
+}
+{
+  e1 = unary_expression() {e = e1;}
+  (
+    LOOKAHEAD(2)
+  {e = ie = ast.newInfixExpression(); setPosition(e, token); ie.setLeftOperand(e1);}
+    ( <STAR> {ie.setOperator(InfixExpression.Operator.TIMES);}
+      | <SLASH> {ie.setOperator(InfixExpression.Operator.DIVIDE);}
+      | <REM> {ie.setOperator(InfixExpression.Operator.REMAINDER);}
+    )
+    e2 = unary_expression()
+    {
+      ie.setRightOperand(e2);
+      e1 = ie;
+    }
+  )*
+  {
+    return e;
+  }
+}
+
+Expression unary_expression():
+{
+  Expression e1;
+  PrefixExpression pe;
+  boolean prefix;
+}
+{
+    {prefix = false; pe = ast.newPrefixExpression(); setPosition(pe, token);}
+  [
+    {prefix = true;}
+    ( <PLUS> {pe.setOperator(PrefixExpression.Operator.PLUS);}
+      | <MINUS> {pe.setOperator(PrefixExpression.Operator.MINUS);}
+      | <BANG> {pe.setOperator(PrefixExpression.Operator.NOT);}
+    )
+  ]
+  e1 = primary_expression()
+  {
+    if (prefix){
+      pe.setOperand(e1);
+      return pe;
+    }
+    else {
+      return e1;
+    }
+  }
+}
+
+Expression lvalue():
+{
+  Expression e, e1;
+  Token t;
+}
+{
+  (
+    LOOKAHEAD(<IDENTIFIER> <LBRACKET>) e = array_access()
+    | t = name() {e = ast.newSimpleName(t.image); setPosition(e, t);}
+    | <LPAREN> e1 = lvalue() <RPAREN>
+    {
+      ParenthesizedExpression pe = ast.newParenthesizedExpression();
+      setPosition(pe, token);
+      pe.setExpression(e1);
+      e = pe;
+    }
+  )
+  {return e;}
+}
+
+ExpressionStatement assignment_statement():
+{
+  ExpressionStatement es;
+  Assignment a;
+}
+{
+  a = assignment_expression()
+  {
+    es = ast.newExpressionStatement(a);
+    setPosition(es, a);
+    return es;
+  }
+}
+
+Assignment assignment_expression():
+{
+  Assignment a;
+  Expression e;
+}
+{
+  {a = ast.newAssignment();}
+  (
+    e = lvalue() {a.setLeftHandSide(e);}
+    (
+      <ASSIGN> {a.setOperator(Assignment.Operator.ASSIGN); setPosition(a, token);}
+    | <STARASSIGN> {a.setOperator(Assignment.Operator.TIMES_ASSIGN ); setPosition(a, token);}
+    | <SLASHASSIGN> {a.setOperator(Assignment.Operator.DIVIDE_ASSIGN); setPosition(a, token);}
+    | <REMASSIGN> {a.setOperator(Assignment.Operator.REMAINDER_ASSIGN); setPosition(a, token);}
+    | <PLUSASSIGN> {a.setOperator(Assignment.Operator.PLUS_ASSIGN); setPosition(a, token);}
+    | <MINUSASSIGN> {a.setOperator(Assignment.Operator.MINUS_ASSIGN); setPosition(a, token);}
+    )
+    e = expression() {a.setRightHandSide(e);}
+  )
+  {return a;}
+}
+
+Type type():
+{
+  Type t;
+  Token tok;
+}
+{
+    (
+        LOOKAHEAD( (primitive_type() | simple_type()) (<LBRACKET> | <RBRACKET> /*| (constant_expression() <RBRACKET>)*/) )
+          t = array_type()
+	    | t = primitive_type()
+        | t = simple_type()
+        //| LOOKAHEAD(<IDENTIFIER>) error("miss type")
+        //  {t = ast.newPrimitiveType(PrimitiveType.VOID);}
+    )
+   {setPosition(t, token); return t; }
+}
+
+PrimitiveType primitive_type():
+{
+  PrimitiveType pt;
+}
+{
+  (
+    <INT> {pt = ast.newPrimitiveType(PrimitiveType.INT);}
+    | <BOOLEAN> {pt = ast.newPrimitiveType(PrimitiveType.BOOLEAN);}
+    | <VOID> {pt = ast.newPrimitiveType(PrimitiveType.VOID);}
+  )
+  {setPosition(pt, token); return pt;}
+}
+
+SimpleType simple_type():
+{
+  SimpleType st;
+  Token t;
+}
+{
+  t = <STRING> {st = ast.newSimpleType(ast.newSimpleName(t.image)); setPosition(st, t);}
+  {return st;}
+}
+
+ArrayType array_type():
+{
+  ArrayType at;
+  Type pt;
+  Expression e;
+}
+{
+  (pt = primitive_type() | pt = simple_type())
+  {
+      at = ast.newArrayType(pt);
+  }
+  ( <LBRACKET> | error("\"[\" expected in array type") )
+  [
+     e = constant_expression()
+     {
+         at.setProperty("exp", e); // used to semantic checker
+     }
+  ]
+  ( <RBRACKET> | error("\"]\" expected in array type") )
+  {setPosition(at, pt); return at;}
+}
+
+Expression constant_expression():
+{
+  Expression e;
+}
+{
+  e = expression()
+  {return e;}
+}
+
+Expression literal():
+{
+  Expression e;
+  Token t;
+}
+{
+  (
+    t = <INTEGER_LITERAL>
+      {
+        NumberLiteral nl = ast.newNumberLiteral();
+        nl.setToken(t.image);
+        e = nl;
+      }
+    | t = <TRUE> {e = ast.newBooleanLiteral(true);}
+    | t = <FALSE> {e = ast.newBooleanLiteral(false);}
+    | t = <STRING_LITERAL>
+      {
+        StringLiteral sl = ast.newStringLiteral();
+        sl.setEscapedValue(t.image);
+        e = sl;
+      }
+  )
+  {setPosition(e, token); return e;}
+}
+
+Token name():
+{
+  Token t;
+}
+{
+  t = <IDENTIFIER>
+  {return t;}
+}
+
+// Token method_name():
+// {
+//     Token t;
+// }
+// {
+//     t = <IDENTIFIER> | t = <READ> | t= <PRINT>
+//     {return t;}
+// }
+
+JAVACODE
+void error_skipto(int kind, String msg) { //used in Shallow Error Recovery
+  ParseException e = generateParseException();
+  System.err.println("Error " + error_num + ": " + msg + " at line " + token.beginLine + " column " + token.beginColumn);
+  error_num += 1;
+  Token t;
+  do {
+    t = getNextToken();
+    if (t.kind == EOF){
+      return;
+    }
+  } while (t.kind != kind);
+}
+
+// JAVACODE
+// void error_skipto(int kind) { //used in Shallow Error Recovery
+//   ParseException e = generateParseException();
+//   System.err.println("Error " + error_num + ": " + e.toString());
+//   error_num += 1;
+//   Token t;
+//   do {
+//     t = getNextToken();
+//     if (t.kind == EOF){
+//       return;
+//     }
+//   } while (t.kind != kind);
+// }
+
+JAVACODE
+void error_skipto2(int kind, String msg, Exception e){ //used in Deep Error Recovery
+    System.err.print("Error " + error_num + ": " + msg
+        + " at line " + token.beginLine + " column " + token.beginColumn);
+    System.err.println(" - details:\n" + e.toString());
+    error_num += 1;
+	Token t;
+	do {
+		t = getNextToken();
+        if (t.kind == EOF){
+          return;
+        }
+	} while (t.kind != SEMICOLON);
+}
+
+JAVACODE
+void error_jump(String msg){ //dump error and jump pass a token
+  Token t = getNextToken();
+  System.err.println("Error " + error_num + ": " + msg + " at line " + t.beginLine + " column " + t.beginColumn);
+  error_num += 1;
+}
+
+JAVACODE
+void error(String msg){ //used in dump error
+  System.err.println("Error " + error_num + ": " + msg + " at line " + token.beginLine + " column " + token.beginColumn);
+  error_num += 1;
+}

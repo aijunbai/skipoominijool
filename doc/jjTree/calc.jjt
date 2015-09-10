@@ -1,0 +1,97 @@
+/* This example shows how to specify a simple parser for a toy calculator
+   language with floats, multiplication, and let-expressions.
+   Here is an example program in this language:
+   
+      let radius = 5.0 in
+        let pi = 3.14 in
+          2.0 * pi * radius 
+
+*/
+
+
+/* *** Specifcation of the parser class *** */
+
+PARSER_BEGIN(CalcParser)
+public class CalcParser {}
+PARSER_END(CalcParser)
+
+/* *** Token specification *** */
+
+/* Skip whitespace */
+SKIP : { " " | "\t" | "\n" | "\r" }
+
+/* Reserved words */
+TOKEN [IGNORE_CASE]: {
+  < LET: "let">
+| < IN: "in">
+| < NI: "ni">
+}
+
+/* Literals */
+TOKEN: {
+  < FPLIT: (["0"-"9"])+ "." (["0"-"9"])+ >    // Floating point literal
+}
+
+/* Operators */
+TOKEN: {
+  < ASSIGN: "=" >
+| < MUL: "*" >
+}
+
+/* Identifiers */
+TOKEN: {
+  < ID: (["A"-"Z", "a"-"z"])+ >
+}
+
+/* *** Context-free grammar (EBNF) *** */
+
+/* Each nonterminal is written like a kind of method, containing all its
+   productions. JavaCC will generate a parsing method for each nonterminal.
+
+   Note: In the start nonterminal, the action "return jjtThis;" instructs
+   JavaCC to return the resulting parse tree from the generated parsing
+   method. Therefore the start nonterminal has a result type (SimpleNode).
+   All other nonterminals have no result type (void). 
+*/
+
+/* The start nonterminal and its productions. */
+
+SimpleNode Start() : {}        // Start -> Exp
+{
+  Exp()
+  { return jjtThis; }
+}
+
+/* Other nonterminals and their productions */
+
+void Exp() : {}                // Exp -> Factor [MulExp]
+{
+  Factor() [ MulExp() ]
+}
+
+void Factor() : {}             // Factor -> LetExp | FPLitExp | IDExp
+{
+  LetExp()
+| FPLitExp()
+| IDExp()
+}
+
+void LetExp() : {}             // LetExp -> "let" IDExp "=" Exp "in" Exp "ni"
+{
+  <LET> IDExp() "=" Exp() <IN> Exp() <NI>
+}
+
+void MulExp() : {}             // MulExp -> "*" Exp
+{
+  "*" Exp()
+}
+
+void FPLitExp() : {}           // FPLitExp -> FPLIT
+{
+  <FPLIT>
+}
+
+void IDExp() : {}              // IDExp -> ID
+{
+  <ID>
+}

@@ -1,0 +1,53 @@
+/**
+ * This program is used to test whether your compiler can correctly
+ * deal with variable scopes.
+ * The following program is correct and will display nothing.
+ */
+ 
+class Program {
+    static int i1 = 2;
+    static int i2 = 4;
+    
+    static void main() {
+        if (i1!=2) print("error");  // refer to the global variable i1
+        if (i2!=4) print("error");  // refer to the global variable i2
+        
+        {
+            int i2 = 8;
+            if (i2!=8) print("error");  // refer to the local variable
+                                        // i2 in this block
+        }
+        
+        if (i2!=4) print("error");  // refer to the global variable i2
+        
+        f();
+        
+        return;
+    }
+    
+    static void f() {
+        {
+            int i3 = 16;
+            if (i3!=16)  print("error"); // refer to the local variable
+                                         // i3 in this block
+        }
+        {
+            int i3 = 32;
+            if (i3!=32)  print("error"); // refer to the local variable
+                                         // i3 in this block
+        }
+        
+        int i3 = 64;
+        if (i3!=64)  print("error");  // refer to the local variable
+                                      // i3 in this block
+    }
+    
+    static void i1() {  // The method can have the same name with a
+                        // global variable.
+        if (i1!=2)  print("error");  // refer to the global variable i1
+        
+        int i1 = 128;  // The local variable can hava the same name
+                       // with the method.
+        if (i1!=128) print("error");
+    }
+}

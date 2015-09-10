@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="eg1" basedir="." name="examples" >
+
+  <property name="javacc.home" value="/usr/local/javacc/" ></property>
+
+  <target name="eg1" description="Builds example 'eg1'" >
+    <delete dir="eg1" ></delete>
+    <mkdir dir="eg1" ></mkdir> 
+    <copy todir="eg1" file="eg1.jjt" ></copy>
+    <jjtree javacchome="${javacc.home}" target="eg1.jjt" outputdirectory="eg1" ></jjtree>
+    <javacc javacchome="${javacc.home}" target="eg1/eg1.jj" outputdirectory="eg1" ></javacc>
+    <javac deprecation="false" target="1.4" srcdir="eg1" destdir="eg1" source="1.4" nowarn="yes" ></javac>
+    <echo message="*******" ></echo>
+    <echo message="******* Now cd into the eg1 directory and run 'java eg1' ******" ></echo>
+    <echo message="*******" ></echo>
+  </target>
+
+  <target name="eg2" description="Builds example 'eg2'" >
+    <delete dir="eg2" ></delete>
+    <mkdir dir="eg2" ></mkdir> 
+    <copy todir="eg2" file="eg2.jjt" ></copy>
+    <copy todir="eg2" file="ASTMyID.java" ></copy>
+    <jjtree javacchome="${javacc.home}" target="eg2.jjt" outputdirectory="eg2" ></jjtree>
+    <javacc javacchome="${javacc.home}" target="eg2/eg2.jj" outputdirectory="eg2" ></javacc>
+    <javac deprecation="false" target="1.4" srcdir="eg2" destdir="eg2" source="1.4" nowarn="yes" ></javac>
+    <echo message="*******" ></echo>
+    <echo message="******* Now cd into the eg2 directory and run 'java eg2' ******" ></echo>
+    <echo message="*******" ></echo>
+  </target>
+
+  <target name="eg3" description="Builds example 'eg3'" >
+    <delete dir="eg3" ></delete>
+    <mkdir dir="eg3" ></mkdir> 
+    <copy todir="eg3" file="eg3.jjt" ></copy>
+    <copy todir="eg3" file="ASTMyID.java" ></copy>
+    <jjtree javacchome="${javacc.home}" target="eg3.jjt" outputdirectory="eg3" ></jjtree>
+    <javacc javacchome="${javacc.home}" target="eg3/eg3.jj" outputdirectory="eg3" ></javacc>
+    <javac deprecation="false" target="1.4" srcdir="eg3" destdir="eg3" source="1.4" nowarn="yes" ></javac>
+    <echo message="*******" ></echo>
+    <echo message="******* Now cd into the eg3 directory and run 'java eg3' ******" ></echo>
+    <echo message="*******" ></echo>
+  </target>
+
+  <target name="eg4" description="Builds example 'eg4'" >
+    <delete dir="eg4" ></delete>
+    <mkdir dir="eg4" ></mkdir> 
+    <copy todir="eg4" file="eg4.jjt" ></copy>
+    <copy todir="eg4" file="ASTMyID.java" ></copy>
+    <copy todir="eg4" file="ASTMyOtherID.java" ></copy>
+    <copy todir="eg4" file="eg4DumpVisitor.java" ></copy>
+    <jjtree javacchome="${javacc.home}" target="eg4.jjt" outputdirectory="eg4" ></jjtree>
+    <javacc javacchome="${javacc.home}" target="eg4/eg4.jj" outputdirectory="eg4" ></javacc>
+    <javac deprecation="false" target="1.4" srcdir="eg4" destdir="eg4" source="1.4" nowarn="yes" ></javac>
+    <echo message="*******" ></echo>
+    <echo message="******* Now cd into the eg4 directory and run 'java eg4' ******" ></echo>
+    <echo message="*******" ></echo>
+  </target>
+
+  <target name="clean" description="Cleans up any example directories" >
+    <delete dir="eg1" ></delete>
+    <delete dir="eg2" ></delete>
+    <delete dir="eg3" ></delete>
+    <delete dir="eg4" ></delete>
+  </target>
+    
+
+</project>

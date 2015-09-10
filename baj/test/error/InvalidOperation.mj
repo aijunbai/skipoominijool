@@ -1,0 +1,27 @@
+/**
+ * This program is used to test whether your compiler can find out
+ * some invalid operations about array.
+ * The following program is wrong. Your compiler should find out the
+ * errors. And it's better to point out the exact posiotions of the
+ * errors and output useful information about the errors.
+ */
+ 
+class Program {
+    static void main() {
+        int[] a1 = {1,2,3,};    // ERROR: initialization expression should not end with ","
+        int[3] a2 = {1,2,3};
+        int[3] a3 = a2;         // ERROR: invalid assignment
+        
+        String s1 = "abc", s2=s1;   // CORRECT
+        
+        int l = a2.length;
+        
+        l = s1.length;          // ERROR
+        
+    }
+    
+    int[] f(int[] i) {  //ERROR: method can't return an array.
+        return i;
+    }
+    
+}

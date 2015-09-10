@@ -1,0 +1,26 @@
+/**
+ * This program is used to test whether your
+ * compiler can find the misuse of keywords.
+ */
+ 
+class Program {
+    static void main() {
+        int boolean;    // keyword "boolean" is misused here
+        int int;        // keyword "int" is misused here
+        int String;        // keyword "String" is misused here
+        int final;        // keyword "final" is misused here
+        int read;        // keyword "read" is misused here
+        int print;        // keyword "print" is misused here
+        int if;            // keyword "if" is misused here
+        int else;        // keyword "else" is misused here
+        int while;        // keyword "while" is misused here
+        int break;        // keyword "break" is misused here
+        int continue;    // keyword "continue" is misused here
+        int void;        // keyword "void" is misused here
+        int class;        // keyword "class" is misused here
+        int return;        // keyword "return" is misused here
+        int true;        // keyword "true" is misused here
+        int false;        // keyword "false" is misused here
+        return;
+    }
+}

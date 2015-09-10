@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="compile-and-test" basedir="." name="Java 1.5 Parser" >
+  <property name="version" value="1.0" >
+  </property>
+  <property name="debug_parser" value="false" >
+  </property>
+  <property name="debug_scanner" value="false" >
+  </property>
+
+  <target depends="compile" name="compile-and-test" >
+     <exec executable="java" >
+           <arg value="-classpath" ></arg>
+           <arg value="." ></arg>
+           <arg value="JavaParser" ></arg>
+           <arg value="JavaParser.java" ></arg>
+     </exec>
+  </target>
+
+  <target depends="generated-files" name="compile" >
+    <javac srcdir="." target="1.4" destdir="." source="1.4" nowarn="yes" >
+    </javac>
+  </target>
+
+  <target name="clean" >
+    <delete >
+      <fileset dir="." >
+         <include name="JavaParser.java" ></include>
+         <include name="JavaParserTokenManager.java" ></include>
+         <include name="JavaParserConstants.java" ></include>
+         <include name="*CharStream*.java" ></include>
+         <include name="TokenMgrError.java" ></include>
+         <include name="ParseException.java" ></include>
+         <include name="*.class" ></include>
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="parser-files-init" >
+        <uptodate property="parser.gen" targetfile="Java1.5.jj" >
+            <srcfiles dir="." includes="JavaParser.java" ></srcfiles>
+        </uptodate>
+  </target>
+
+  <target depends="parser-files-init" name="generated-files" if="parser.gen" >
+     <exec executable="javacc" >
+           <arg value="-DEBUG_PARSER=${debug_parser}" ></arg>
+           <arg value="-DEBUG_TOKEN_MANAGER=${debug_scanner}" ></arg>
+           <arg value="Java1.5.jj" ></arg>
+     </exec>
+  </target>
+</project>

@@ -1,0 +1,64 @@
+/**
+ * This program implements algorithm of quick sort.<br>
+ * It is used to test whether your compiler can correctly deal
+ * with most of the features in SkipOOMiniJOOL language, such 
+ * as various data types, statements, scopes, method invocations,
+ * etc.<br>
+ * The following program is correct and will excute quick sort on
+ * 10 integers repeatly.
+ */
+class Program {
+  static int i = 1;  
+  static void main() {
+    int flag;
+    while (i < 1){
+      if (i>1 ){
+        print("\nContinue? 1-yes, 0-no: ");
+        read(flag);
+        if (flag == 0 ) break;
+        else if (flag!=1) continue;
+        readArray( );
+      }
+      print("\nExecuting No."); print(i); 
+      print(" quicksort:\n  Before sorting:");
+      printArray(data);
+      qsort(data, 0, data.length - 1);
+      print("\n  After sorting:");
+      printArray(data);
+      i = i+1;
+    }
+  }
+  static int [10] data = {123,52,8,74,62,74,55,44,74,80};
+  static void printArray(int[] a) {
+    int i = 0;  String str = "\n    Member ";
+    while (i < a.length) {
+      print(str); print(i); print(" is ");
+      print( a[i]); i=i+1;
+    }
+  }
+  static void qsort(int[] a, int low, int high) {
+    if (low >= high) return;
+    int p = partition(a, low, high);
+    qsort(a, low, p-1);
+    qsort(a, p + 1, high);
+  }
+  static int partition(int[] a, int low, int high) {
+    int pivot = a[low], i = low, j = high;
+    while (i < j) {
+      while (i<j && a[j] >= pivot) j=j-1;
+      a[i] = a[j];
+      while (i<j && a[i] <= pivot) i=i+1;
+      a[j] = a[i];
+    }
+    a[i] = pivot;
+    return i;
+  } // end of partition
+  static void readArray( ) {
+    int i = 0;
+    print("Please input "); print(data.length);
+    print(" integers to be sorted.\n");
+    while (i < data.length) {
+      read(data[i]); i=i+1;
+    }
+  }
+}

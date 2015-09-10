@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="SkipOOMiniJOOL Compiler" basedir="..">  
+  <property name="SRC_DIR" location="src"/>       <!-- 源程序文件目录 -->
+  <property name="DEST_DIR" location="classes"/>  <!-- 目标文件目录 -->
+  <property name="DOC_DIR" location="doc"/>       <!-- 文档目录 -->
+  <property name="LIB_DIR" location="lib"/>       <!-- 前端或后端所在目录 -->
+  <property name="CFG_DIR" location="config"/>    <!-- 配置文件目录 -->
+
+  <property name="ROOT_DIR" location=".."/>    <!-- ROOT_DIR -->
+  
+  <!-- 实验平台目录和实验平台的类库文件 -->
+  <property name="PLATFORM_DIR" location="${ROOT_DIR}/platform/lib"/>
+  <property name="PLATFORM_LIB" 
+            value="${PLATFORM_DIR}/edu.ustc.cs.compile.platform.interfaces.jar:
+                   ${PLATFORM_DIR}/edu.ustc.cs.compile.platform.util.jar"/>
+
+  <!-- 我们提供的类库文件 -->
+  <property name="EXTRA_LIB_DIR" location="${ROOT_DIR}/lib"/>
+  <property name="EXTRA_LIB" value="${EXTRA_LIB_DIR}/edu.ustc.cs.compile.arch.jar"/>
+  
+  <!-- Eclipse AST所在目录和类库文件 -->
+  <property name="AST_DIR" location="${EXTRA_LIB_DIR}/AST/3.1.2"/>
+  <property name="AST_LIB"
+            value="${AST_DIR}/org.eclipse.core.resources_3.1.2.jar:
+                   ${AST_DIR}/org.eclipse.core.runtime_3.1.2.jar:
+                   ${AST_DIR}/org.eclipse.jdt.core_3.1.2.jar:
+                   ${AST_DIR}/org.eclipse.jdt.ui_3.1.2.jar"/>
+
+  <!-- 实验中使用的工具的目录 -->
+  <property name="TOOL_DIR" location="${ROOT_DIR}/tools"/>
+  
+  <!-- JAVACC -->
+  <property name="JAVACC_DIR" location="${TOOL_DIR}/javacc"/>
+  <property name="JAVACC" value="${JAVACC_DIR}/javacc.jar"/>
+
+  <property name="CLASSPATH"
+	  value="${PLATFORM_LIB}:${EXTRA_LIB}:${AST_LIB}:${LIB_DIR}:${JAVACC}"/>
+
+  <property name="PARSER_DIR" value="edu/ustc/cs/compile/skipoominijool"/>
+  
+  <!-- 编译生成前端,与javacc和config任务配合使用 -->
+  <target name="build" depends="javacc">    
+    <mkdir dir="${DEST_DIR}"/>
+	<javac classpath="${CLASSPATH}"
+		srcdir="${SRC_DIR}"
+		destdir="${DEST_DIR}"
+		includes="${PARSER_DIR}/*.java"
+		debug="on">
+	</javac>
+  </target> 
+
+  <!-- 利用JAVACC生成语法分析器 -->
+  <target name="javacc" description="利用javacc生成语法分析器">
+	<mkdir dir="${SRC_DIR}/${PARSER_DIR}"/>
+    <java fork="yes" classpath="${CLASSPATH}" classname="javacc">
+      <arg value="-STATIC=false"/>
+      <arg value="-OUTPUT_DIRECTORY=${SRC_DIR}/${PARSER_DIR}"/>
+      <arg value="${CFG_DIR}/JJ/SkipOOMiniJOOL.jj"/>
+    </java>
+  </target>
+ 
+  <!-- 清除classes -->
+  <target name="clean">
+    <delete dir="${DEST_DIR}"/>
+    <delete dir="${SRC_DIR}"/>
+  </target>
+
+  <!-- 调用javadoc为你的程序生成文档 -->
+  <target name="doc">
+    <mkdir dir="${DOC_DIR}"/>
+	<javadoc sourcepath="${SRC_DIR}" destdir="${DOC_DIR}" classpath="${CLASSPATH}"
+		packagenames="edu.ustc.cs.compile.parser.*" Windowtitle="SkipOOMiniJOOL Compiler"/>
+  </target>
+  
+</project>

@@ -1,0 +1,68 @@
+/**
+ * There are some errors about the type of expressions within parenthesis
+ * in this program. Your compiler should find them as many as possible.
+ */
+ 
+class Program {
+    static void main() {
+        int i, i1;     
+        String s, s1;  
+        boolean b, b1;
+        
+        i = ("Hello");  // ERROR
+        i = (true);     // ERROR
+        i = 0;
+        i1 = i;
+                
+        s = (0);        // ERROR
+        s = (true);     // ERROR
+        s = "Hello";
+        s1 = s;
+        
+        b = (0);        // ERROR
+        b = ("Hello");  // ERROR
+        b = true;
+        b1 = b;
+        
+        i = (s);        // ERROR
+        i = (b);        // ERROR
+        i = (0+(s));    // ERROR
+        i = ((b)+0);    // ERROR
+        
+        s = (i);        // ERROR
+        s = (b);        // ERROR
+        
+        b = (s);        // ERROR
+        b = (i);        // ERROR
+        b = (true&&(i));// ERROR
+        b = (true||(i));// ERROR
+        b = (false&&(s)); // ERROR
+        b = (false||(s)); // ERROR
+        b = ((i)&&true);  // ERROR
+
+        int[9] digit1 = {0,1,2,3,4,5,6,7,8,9};  // ERROR
+        int[11] digit2 = {0,1,2,3,4,5,6,7,8,9}; // ERROR
+        int[10] digit3 = {0,1,2,3,4,5,6,7,8,9};
+        
+        f(digit3);      // ERROR
+        f();            // ERROR
+        i2 = f("abd");  // ERROR
+        f("abd");
+        
+        h();            // ERROR: no declaration of h() can be found.    
+
+        {int i;}
+        i = 10;         // ERROR: no declaration of i can be found.
+        {int i;}
+        j = i;          // ERROR: no declarations of i and j can be found.
+    }
+    
+    static void f(String[] s) {
+        g(s);           // ERROR
+        g(s.length);
+    }
+    
+    static void g(int i) {
+    }
+
+}

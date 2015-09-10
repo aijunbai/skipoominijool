@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+
+# Run the test cases
+#
+
+echo ------------------ Testing allsyntax.calc ------------------------------
+java CalcDumpTree <allsyntax.calc
+echo ------------------------------------------------------------------------
+

@@ -1,0 +1,176 @@
+前四个为语法检查的，后面的是语义检查
+
+1、
+class { // miss class name
+    static boolean[10] unsupportedBoolArray;    // unsupported boolean array
+    static String[10] unsupportedStringArray;   // unsupported string array
+
+    static void missLeftParen1) {       // method without parameters misses 
+left paren
+}
+
+    static void missLeftParen2 int i) {         //method with parameters 
+misses left paren
+}
+
+    static void missRightParen1( {      // method without parameters misses 
+right paren
+}
+
+    static void missRightParen2(int i {         // method with parameters 
+missse right paren
+}
+
+    void missStaticMethod() {               // method misses static
+}
+
+    static missType;                // variable misses type
+
+    int missStaticVar;              // variable misses static
+
+    static void Main() {
+        int[10 missRightBrack;      // array type misses right brack
+        int 10] missLeftBrack;      // array type misses left brack
+        int[] missLength;           // array type misses length
+
+        missIndex[] = 12;               // array access misses index
+
+        while (true {               // while statement misses right paren
+            while false) {          // while statement misses left paren
+                while () ;      // while statement misses condition 
+expression
+                while (false;       // while statement misses right paren
+                while true);        // while statement misses left paren
+}
+}
+
+        if (true {              // if statement misses right paren
+            if false) {             // if statement misses left paren
+                if ();          // if statement misses condtion expression
+                if (true;       // if statement misses right paren
+                if true);       // if statement misses left paren
+}
+}
+
+        if (true {              // if statement misses right paren
+} else if false) {          // if statement misses left paren
+} else if () {              // if statement misses condition
+expression
+} else {
+}
+}
+}
+
+2、
+class 123 { // error classs name
+    
+}
+
+3、
+class Program {
+
+4、
+class Program 
+}
+
+5、
+/***********************************************
+ * This file is used to demo the semantic check of the first *
+ * round .                                                   *
+ ***********************************************/
+
+class Program {
+    static int globalInt1, globalInt1;  // redefinition of static variable 
+globalInt1
+
+    static int globalInt1;          // redefinition of static variable 
+globalInt1
+
+    static int f() {                
+        return "123";           // wrong return type
+}
+
+    static int f() {                // redefinition of method f
+        return 1+"!23";     // wrong type of expression will not propagate
+}
+
+    static boolean f() {            // redefinition of method f
+        return 0;
+}
+
+    static void g(int i, int i, boolean i) {    // redefinition of 
+parameter i
+        return;
+}
+
+    static void Main() {
+        int intVar, intVar, intVar; // redefinition of variable intVar
+        int intVar;         // redefinition of variable intVar
+        int intVarArray;
+        int[10] intVarArray;
+        boolean boolVar;
+        String stringVar;
+
+
+        if (12);
+        while ("12");
+
+        intVar = true + 10;
+        intVar = 10 + "!24";
+        intVar = "!24" + true;
+
+        boolVar = (10<abc);
+
+        intVar = -"13";
+
+        return;
+}
+}
+
+6、
+class Program {
+    static int ii;
+
+    static int f(int i) {
+        int ii;     // redefined variable ii
+        int i;      // redefined variable i
+        boolean b;
+
+        i = g(ii);  // assignment type error
+        b = i + i;  // assignment type error & plus expression type error
+        i = b;      // assignment type error
+        i = (i<b);  // assignment type error & less expression type error
+        i = +b;
+
+        if (i);     // if statement condition expression type error
+        while (ii); // while statement condition expression type error
+        return b;   // return type error
+}
+
+    static boolean g(boolean b) {
+        b = h(ii, b);       // assignment type error
+        ii = h();       // method argument error(fewer)
+        ii = h(ii, b, b);       // method argument error(more)
+        return h(ii, b);    // return statement type error
+}
+
+    static int h(int i, boolean b) {    // miss return 
+        if (b)
+            return i;
+        else    return -i;
+}
+
+    static int ff(int i, String s, boolean b) {
+        s[0] = "!24";       // undefined array
+        b[10] = true;       // above
+        i = s[0];       // above
+        return i[0];        // above
+}
+}
+
+7、
+class Program {
+    static int Main(int i) {
+        return 0;
+}
+} 

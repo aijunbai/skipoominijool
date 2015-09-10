@@ -1,0 +1,11 @@
+/**
+ * This program is used to test whether your compiler can find the
+ * omission of the main method.
+ * The following program is wrong. Your compiler should find out the
+ * errors. It's better to point out the exact positions of the errors
+ * and output useful information.
+ */
+ 
+class Program {
+    // ERROR: miss main method
+}

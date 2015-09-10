@@ -1,0 +1,79 @@
+clas s  // class spell error | miss class name 
+
+        static int _hello(int aa a[],int a[) {
+                boolean[-9] _;    // _ is legal as a name
+                int _;
+{int x;}{int x;}  //Should have no error report here line 6
+         while true);
+
+
+                if(sd a){
+                        return asd asdfsfa;
+}
+                while[true);
+                _ = (_ _ ) +r;
+                _ = 1;
+                _=print(_,_);
+                return;
+}
+
+        main(int a){
+}
+
+        int a;
+        static boolean[a] a;
+        _hello(){
+                int[ a;
+                int ;
+                z z,a;
+                return a[55s] + _hello(z);
+                int k;
+                k = + true * false;
+                k ^= k;
+}
+}
+<eof>
+
+输出结果：
+ Error 1:       Unrecognized code segment, name expected at line 3.
+ Error 2:       Bracket not matched at line 3.
+ Error 3:       Unsupported Array Type of boolean, int assumed. at (4,3) to 
+(4,10).
+ Error 4:       Array Length must be positive at line 4.
+ Error 5:       Duplicate Local variable "_" at line 5.
+ Error 6:       "(" expected in while conditions at line 7.
+ Error 7:       expression cannot recognized in the return statement at line 
+11.
+ Error 8:       Unrecognized code segment in if statement at line 10.
+ Error 9:       "(" and ")" expected in while conditions at line 13.
+ Error 10:      Expression in parenthesis could not be recognized at line 14.
+ Error 11:      Unresolved name "r" at (14,15) to (14,16).
+ Error 12:      Type mismatch: cannot convert int to int[] at line 15.
+ Error 13:      print function only receives one parameter at line 16.
+ Error 14:      Type mismatch: cannot convert void to int[] at line 16.
+ Error 15:      This method must return a result of type int at line 17.
+ Error 16:      Static required as the modifier of method at line 20.
+ Error 17:      Method require a return type declaration, void assumed. at 
+line 20.
+ Error 18:      Field variable must be static, "STATIC" assumed at line 23.
+ Error 19:      Unsupported Array Type of boolean, int assumed. at (24,9) to 
+(24,16).
+ Error 20:      Array Declaration require constant length initialization at 
+line 24.
+ Error 21:      Duplicate field variable "a" at (24,20) to (24,20).
+ Error 22:      Duplicate Method _hello() at (25,2) to (25,8).
+ Error 23:      Static required as the modifier of method at line 25.
+ Error 24:      Method require a return type declaration, void assumed. at 
+line 25.
+ Error 25:      Statement cannot be recognized at (26,8) to (27,7).
+ Error 26:      z cannot be resolved to a type at line 28.
+ Error 27:      expression in bracket could not be recognized at line 29.
+ Error 28:      The method _hello[int MISSING[], int a[]] is not applicable 
+for the arguments [] at line 29.
+ Error 29:      Type mismatch: cannot convert from error to void at line 29.
+ Error 30:      The unary operator + is not defined for the argument type(s) 
+boolean at line 31.
+ Error 31:      Unsupported operator ^= at line 32.
+ Error 32:      "{"expected at the beginning of class body at line 1.
+ Error 33:      "class" expected, null found at (0,0) to (1,6).
+ Error 34:      No main method found in this class

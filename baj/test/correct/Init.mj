@@ -1,0 +1,27 @@
+/**
+ * This program is used to test your compiler can generate
+ * correct codes to initialize variables.
+ * The following program is correct and will display nothing.
+ */
+ 
+class Program {
+    static int i;       // i should be initialized to 0.
+    static boolean b;   // b should be initialized to false.
+    
+    static int j = i+1;
+    static void main() {
+        int[LEN*1-0] iarray;
+        boolean[(LEN)] barray;
+        
+        if (i!=0)     print("error");
+        if (j!=1)     print("error");  
+        if (b!=false) print("error");
+        if (barray[LEN-1]!=false) print("error");
+        if (barray[0]!=false) print("error");
+        if (iarray[LEN-1]!=0) print("error");
+        if (iarray[0]!=0) print("error");
+        if (b!=false) print("error");
+    }
+    
+    static final int LEN = 2;
+}

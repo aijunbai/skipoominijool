@@ -1,0 +1,117 @@
+/*calculator.jj: An interactive calculator*/
+options {
+	STATIC = false;
+}
+
+PARSER_BEGIN(Calculator)
+import java.io.PrintStream;
+
+class Calculator {
+	public static void main (String[] args)
+	throws ParseException, TokenMgrError, NumberFormatException{
+		Calculator parser = new Calculator(System.in);
+		parser.Start(System.out);
+	}
+	double previousValue = 0.0;
+}
+PARSER_END(Calculator)
+
+SKIP: {" "|"\t"}
+TOKEN: {<EOL:"\n"|"\r"|"\r\n">}
+TOKEN: {<PLUS:"+">}
+TOKEN: {<MINUS:"-">}
+TOKEN: {<TIMES:"*">}
+TOKEN: {<DIVID:"/">}
+TOKEN: {<OPEN_PAR:"(">}
+TOKEN: {<CLOSE_PAR:")">}
+TOKEN: {<PREVIOUS:"$">}
+TOKEN: {<NUMBER:<DIGITS>|<DIGITS>"."<DIGITS>|<DIGITS>"."|"."<DIGITS>>}
+TOKEN: {<#DIGITS:(["0"-"9"])+>}
+
+void Start(PrintStream printStream) throws NumberFormatException:
+{
+}
+{
+	{printStream.print("$ ");}
+	(
+		try {
+			previousValue = Expression()
+			<EOL>
+			{printStream.println(previousValue);}
+			{printStream.print("$ ");}
+		} catch (ParseException e){
+			System.err.println("caught ParseException");
+			error_skipto(EOL);	
+		}
+	)*
+	<EOF>
+}
+
+double Expression() throws NumberFormatException:
+{
+	double value;
+	double i;
+}
+{
+	value = Term()
+	(
+		<PLUS>
+		i = Term()
+		{value += i;}
+	|
+		<MINUS>
+		i = Term()
+		{value -= i;}
+	)*
+	{return value;}
+}
+
+double Term() throws NumberFormatException:
+{
+	double value;
+	double i;
+}
+{
+	value = Primary()
+	(
+		<TIMES>
+		i = Primary()
+		{value *= i;}
+	|
+		<DIVID>
+		i = Primary()
+		{value /= i;}
+	)*
+	{return value;}
+}
+
+double Primary() throws NumberFormatException:
+{
+	Token t;
+	double d;
+}
+{
+	t = <NUMBER>
+	{return Double.parseDouble(t.image);}
+	|
+	<PREVIOUS>
+	{return previousValue;}
+	|
+	<OPEN_PAR> d = Expression() <CLOSE_PAR>
+	{return d;}
+	|
+	<MINUS> d = Primary()
+	{return -d;}
+	|
+	{error_skipto(EOL);}
+}
+
+JAVACODE
+void error_skipto(int kind) {
+	ParseException e = generateParseException();
+	System.out.println(e.toString());
+	Token t;
+	do {
+		t = getNextToken();
+	} while(t.kind != kind);
+}

@@ -1,0 +1,32 @@
+/**
+ * This program is used to test whether your compiler can find out
+ * the overlapping variable scopes.
+ * The following program is wrong. Your compiler should find out the
+ * errors. And it's better to point out the exact position of the
+ * errors and output useful information.
+ */
+ 
+class Program {
+    static int i1 = 2;  // ERROR: overlap with another global variable i1
+    
+    static void main() {
+        int i2 = 8;
+        {
+            int i2 = 16; // ERROR: overlap with previous local
+                         // variable i2            
+        }
+        
+        f(32);
+        
+        return;
+    }
+    
+    static int i1 = 4;  // ERROR: overlap with another global variable i1
+    static String i1 = "123"; // ERROR: overlap with another global
+                              // variable, even if they have different
+                              // type
+
+    static void f(int i3) {
+        int i3 = 64;  // ERROR: overlap with parameter i3
+    }
+}

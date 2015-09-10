@@ -1,0 +1,30 @@
+/**
+ * This program is used to test whether your compiler can find out
+ * the out-of-bound operations of array. For those operations that
+ * can't be checked out at compile-time, your compiler should 
+ * generate codes to check them at runtime.
+ * The following program is wrong. Your compiler should find out the
+ * errors as many as possible. And it's better to point out the exact
+ * positions of the errors and output useful information.
+ */
+ 
+class Program {
+    static void main() {
+        int[10] array;
+        
+        array[-1] = -1;  // ERROR: out of the lower bound. This error
+                         // should be checked out at compile-time.
+        array[10] = 10;  // ERROR: out of the upper bound. This error
+                         // should be checked out at compile-time.
+                         
+        int i = -1;
+        // ERROR: There are illegal array accesses that is out of bound
+        // in the following loop. If your compiler can't check out them,
+        // be sure they can be checked out at runtime before the crash.
+        while (i<=10) {
+            array[i] = i;
+        }
+        
+        return;
+    }
+}

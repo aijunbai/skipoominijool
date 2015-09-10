@@ -1,0 +1,43 @@
+/**
+ * This program is used to test whether your compiler can correctly deal
+ * with left variables.
+ * The following program is correct and will display nothing.
+ */
+ 
+class Program {
+    static void main() {
+        int i;
+        String s;
+        boolean b;
+        int[10] digit;
+        String[26] letter = {"A","B","C","D","E","F","G",
+                             "H","I","J","K","L","M","N",
+                             "O","P","Q","R","S","T",
+                             "U","V","W","X","Y","Z"};
+        boolean[2] bool;
+        int[3] misc;
+        
+        (i) = (digit.length-1) % digit.length;
+        s = ("Hello");
+        b = true;
+        
+        while (i >= 0) {
+            if (digit[i]!=0) print("error");
+            digit[i] = i;
+            i -= 1;
+        }
+        i = 9;
+        while (i >= 0) {
+            if (digit[i]!=i) print("error");
+            i -= 1;
+        }
+        
+        if (bool[0]!=false && !false ) print("error");
+        (bool[0]) = true;
+        ((bool[1])) = false;
+        if (bool[0]!=true && true ) print("error");
+        if (bool[1]!=false || false) print("error");
+        
+        misc[0] = misc[1] = misc[misc.length-1] = 10;
+    }
+}

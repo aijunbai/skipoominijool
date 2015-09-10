@@ -1,0 +1,4 @@
+class Program {
+    static int [j] a;       // ERROR: j is declared after this declaration
+    static final int j=10;
+}

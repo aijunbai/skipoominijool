@@ -1,0 +1,61 @@
+/**
+ * This program implements algorithm of quick sort.
+ * When compiling this program, the compiler should report some warning 
+ * messages and generate corresponding correct representation (such as 
+ * AST, assembly code, etc.).
+ */
+class Program {
+  static int i = 1;  
+  void main() { // warning: missing "static"
+    int flag;
+    while (true){
+      if (i>1 ){
+        print("\nContinue? 1-yes, 0-no: ");
+        read(flag);
+        if (flag == 0 ) break;
+        else if (flag!=1) continue;
+        readArray( );
+      }
+      print("\nExecuting No."); print(i); 
+      print(" quicksort:\n  Before sorting:");
+      printArray(data);
+      qsort(data, 0, data.length - 1);
+      print("\n  After sorting:");
+      printArray(data);
+      i = i+1;
+    }
+  }
+  int [] data = {123,52,8,74,62,74,55,44,74,80}; // warning: missing "static"
+  static void printArray(int[10] a) { // warning: the given length of parameter a will be ignored
+    int i = 0;  String str = "\n    Member ";
+    while (i < a.length) {
+      print(str); print(i); print(" is ");
+      print( a[i]); i=i+1;
+    }
+  }
+  static void qsort(int[9] a, int low, int high) { // warning: the given length of parameter a will be ignored 
+    if (low >= high) return;
+    int p = partition(a, low, high);
+    qsort(a, low, p-1);
+    qsort(a, p + 1, high);
+  }
+  static int partition(int[] a, int low, int high) {
+    int pivot = a[low], i = low, j = high;
+    while (i < j) {
+      while (i<j && a[j] >= pivot) j=j-1;
+      a[i] = a[j];
+      while (i<j && a[i] <= pivot) i=i+1;
+      a[j] = a[i];
+    }
+    a[i] = pivot;
+    return i;
+  } // end of partition
+  static void readArray( ) {
+    int i = 0;
+    print("Please input "); print(data.length);
+    print(" integers to be sorted.\n");
+    while (i < data.length) {
+      read(data[i]); i=i+1;
+    }
+  }
+}
